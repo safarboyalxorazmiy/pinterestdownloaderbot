@@ -1,4 +1,5 @@
 package org.example;
+
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
@@ -19,23 +20,47 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 
+import static org.example.Main.logger;
+
 public class PinterestVideoDownloaderBot extends TelegramLongPollingBot {
     // 5881206648:AAHenXUMn8Gt_lZeW_IAsym8JP6wfP4jEcc, FreePinterestDownloaderBot
 
+    public static Long users;
+
     public void onUpdateReceived(Update update) {
+
         if (update.hasMessage() && update.getMessage().hasText()) {
             Message msg = update.getMessage();
             String txt = msg.getText();
-            if (txt.startsWith("https://www.pinterest.com/")) {
+            if (txt.startsWith("/")) {
+                switch (txt) {
+                    case "/start" -> {
+                        sendMsg(msg, "Send me just a link and I will send you a video");
+                    }
+                    case "/login" -> {
+
+                    }
+                    case "/logout" -> {
+
+                    }
+                    default -> {
+                        sendMsg(msg, "Incorrect command. Please try again");
+                    }
+                }
+            } else if (txt.startsWith("https://www.pinterest.com/")) {
                 sendMsg(msg, "Let me see...");
+
+
                 try {
                     String videoUrl = getVideoLinkFromSite(txt);
+                    logger.info("{} is downloaded ", videoUrl);
                     sendMedia(msg, videoUrl);
                     sendMsg(msg, "Video downloaded successfully!");
                 } catch (Exception e) {
-                    e.printStackTrace();
                     sendMsg(msg, "An error occurred while downloading the video");
                 }
+            } else {
+                sendMsg(msg, "The page you were on trying to send you to an invalid URL");
             }
         }
     }
@@ -77,7 +102,7 @@ public class PinterestVideoDownloaderBot extends TelegramLongPollingBot {
         try {
             execute(s);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            logger.warn("Something went wrong during sending a message");
         }
     }
 
