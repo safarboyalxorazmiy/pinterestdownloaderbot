@@ -1,2 +1,2 @@
 # pinterestdownloader
-Telegram bot to download videos from pinterest.com https://t.me/FreePinterestDownloaderBot
+Telegram bot to download videos from pinterest.com live preview is here https://t.me/FreePinterestDownloaderBot
