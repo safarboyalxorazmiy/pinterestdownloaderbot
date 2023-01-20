@@ -1,5 +1,6 @@
 package org.example;
 
+import com.google.gson.*;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
@@ -8,8 +9,6 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -73,7 +72,7 @@ public class PinterestVideoDownloaderBot extends TelegramLongPollingBot {
         String html = "";
         String line = in.readLine();
         while (line != null) {
-            html = line;
+            html += line;
             line = in.readLine();
         }
         in.close();
@@ -88,10 +87,42 @@ public class PinterestVideoDownloaderBot extends TelegramLongPollingBot {
             }
         }
 
+        if (!jsonContent.contains("contentUrl")) {
+            Elements videos = doc.select("script#__PWS_DATA__");
+
+            for (Element element : videos) {
+                if (element.html().contains(".mp4")) {
+                    jsonContent = element.html();
+                    break;
+                }
+            }
+
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(jsonContent, JsonObject.class);
+
+
+            JsonObject props = jsonObject.getAsJsonObject("props");
+            JsonObject initialReduxState = props.getAsJsonObject("initialReduxState");
+            JsonObject pins = initialReduxState.getAsJsonObject("pins");
+            String id = pins.entrySet().iterator().next().getKey();
+            JsonObject pin = pins.getAsJsonObject(id);
+            JsonObject storyPinData = pin.getAsJsonObject("story_pin_data");
+            JsonObject page = storyPinData.getAsJsonArray("pages").get(0).getAsJsonObject();
+            JsonObject block = page.getAsJsonArray("blocks").get(0).getAsJsonObject();
+            JsonObject video = block.getAsJsonObject("video");
+            JsonObject video_list = video.getAsJsonObject("video_list");
+            JsonObject V_EXP7 = video_list.getAsJsonObject("V_EXP7");
+            System.out.println(V_EXP7);
+            String targetUrl = V_EXP7.get("url").getAsString();
+            return targetUrl;
+
+        }
+
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(jsonContent, JsonObject.class);
 
         String targetUrl = jsonObject.get("contentUrl").getAsString();
+        System.out.println(targetUrl);
         return targetUrl;
     }
 
